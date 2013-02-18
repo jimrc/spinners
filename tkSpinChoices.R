@@ -14,7 +14,7 @@
     tmp
   }
 
-runLength <-  function(x) max(rle(x)$length)
+maxRunLength <-  function(x) max(rle(x)$length)
 
 spinFrame <- function(...){
   if( !(as.character(tcl("info", "tclversion")) >= "8.5"))
@@ -59,7 +59,7 @@ spinFrame <- function(...){
    tkconfigure(sc, variable= nReps)
    
    ## Choose statistic
-   stats <- c("mean","min","max","runLength")
+   stats <- c("mean","min","max","maxRunLength")
    ## from twiddler
    cFrame <- ttkframe(box, relief = "flat", borderwidth = 2)
    statFunction <- tclVar()
@@ -95,3 +95,4 @@ spinFrame <- function(...){
                     tkdestroy(box)))
 
  }
+
