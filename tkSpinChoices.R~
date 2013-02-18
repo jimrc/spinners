@@ -1,0 +1,93 @@
+  require(tcltk)
+  source("spinner.R")
+  spin.env <-  new.env(parent=.GlobalEnv)
+  reSpin <- function(nCat, nDraws = 1, nReps =1, prob = rep(1/nCat, nCat),
+                     names = 1:nCat, speed = 10, plotIt = TRUE){
+    tmp <- matrix( as.numeric(spin(nCat, nDraws * nReps, prob, names,
+                                   speed, plotIt)),
+                  nReps, nDraws)
+    assign("samples", tmp, envir = spin.env)
+    tmp
+  }
+
+runLength <-  function(x) max(rle(x)$length)
+
+spinFrame <- function(...){
+  if( !(as.character(tcl("info", "tclversion")) >= "8.5"))
+    stop("Please update tcl/tk to version 8.5 or higher")
+   box <- tktoplevel()
+    tkwm.title(box, "Spinner")
+    tkwm.geometry(box, "+0+15")
+    tkpack(f.slider <- ttkframe(box))
+  
+   ## slider1 -- Pie Pieces
+    nCat <- tclVar("")
+    tkpack(fr <- ttkframe(f.slider), side ="top")
+     lab <- tklabel(fr, text = "Number of Pieces", width = "20")
+     sc <- tkscale(fr, from = 2, to = 10, showvalue = TRUE, resolution = 1, orient = "horiz")
+     tkpack(lab, sc, side =  "left")
+     tkconfigure(sc, variable= nCat)
+   ##  Now how to set the probabilities
+   ##  pack nCat edit boxes into one frame?
+  
+   ## slider2 -- number of spins
+    nDraws <- tclVar("")
+    tkpack(fr <- ttkframe(f.slider), side ="top")
+     lab <- ttklabel(fr, text = "Number of Spins", width = "20")
+     sc <- tkscale(fr, from = 1, to = 20, showvalue = TRUE, resolution = 1, orient = "horiz")
+     tkpack(lab, sc, side =  "left")
+     tkconfigure(sc, variable= nDraws)
+
+   ## slider3 -- speed
+    speed <- tclVar("")
+    tkpack(fr <- ttkframe(f.slider), side ="top")
+     lab <- ttklabel(fr, text = "Speed", width = "20")
+     sc <- tkscale(fr, from = 10, to = 50, showvalue = TRUE, resolution = 5, orient = "horiz") 
+     tkpack(lab, sc, side =  "left")
+     tkconfigure(sc, variable= speed)
+   
+   ## repeat B times  slider 4
+   nReps <-  tclVar("")
+   tkpack(fr <- ttkframe(f.slider), side ="top")
+   lab <- ttklabel(fr, text = "Number of Repeats", width = "20")
+   sc <- tkscale(fr, from = 5, to = 1000, showvalue = TRUE, resolution = 5, orient = "horiz") 
+   tkpack(lab, sc, side =  "left")
+   tkconfigure(sc, variable= nReps)
+   
+   ## Choose statistic
+   stats <- c("mean","min","max","runLength")
+   ## from twiddler
+   cFrame <- ttkframe(box, relief = "flat", borderwidth = 2)
+   statFunction <- tclVar()
+   tclvalue(statFunction) <- stats[1]
+   cLabel <- ttklabel(cFrame, text = "Summarizing Function")
+   tkpack(cFrame, cLabel, side = "top")
+   tkpack(ttkcombobox(cFrame, values = stats, textvariable = statFunction),
+            side='left')
+ 
+   ### Run Button
+    tkpack(r.but <- ttkframe(box), fill = "x")
+    tkpack(ttkbutton(r.but, text = "Run", 
+           command = function(){
+              reSpin(nCat =  as.numeric(tclvalue(nCat)),
+                     nDraws = as.numeric(tclvalue(nDraws)),
+                     nReps =  as.numeric(tclvalue(nReps)),
+                     speed =  as.numeric(tclvalue(speed)), ...)
+             if(length(dev.list()) < 2){
+               dev.new()
+             } else {
+               dev.set(3)
+             }
+             samplDistPlot(apply( spin.env$samples, 1,eval(parse(text=tclvalue(statFunction))) ))
+          
+             dev.set(2)
+           }
+            ), 
+           side="right")
+
+### Exit Button
+    tkpack(f.but <- ttkframe(box), fill = "x")
+    tkpack(ttkbutton(f.but, text = "Exit", command = function()
+                    tkdestroy(box)))
+
+ }

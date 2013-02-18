@@ -1,0 +1,130 @@
+  spin <- function(nCat, nDraws=1, prob = rep(1/nCat, nCat), names = 1:nCat,
+                 speed = 10, plotIt=TRUE){
+  ## function to draw randomly from a spinner
+  opar <- par(mar=c(4,2,1,1)+.1)
+  prob <- prob/sum(prob)
+  palette( colorspace::rainbow_hcl(nCat, c = 60, l = 80, start = 20, 
+                                    end = 360*(nCat-1)/nCat))
+  black1 <- hsv(v=0, alpha=.6)
+  black2 <- hsv(v=0, alpha=.2)
+  ## set background image
+  pie(prob, labels=names, col = 1:nCat, radius = 1, clockwise = TRUE)
+  ##dev.copy(jpg, file="pieface.jpg"); dev.off()
+  pieface <- recordPlot()
+  ## generate all random values
+  draws <- runif(nDraws) 
+  ## print(draws)
+  ## convert to categories
+  outcomes <- cut(draws, cumsum(c(0, prob)), label=names)
+  if(plotIt){
+   i <-  1
+    ## spinner is plotted at 36 locations
+    steps <- pi/2 - 2 * pi * seq(0, 1 + draws[i] , length=36)
+    bkg.color <- cbind(unclass(cut((-steps/2/pi +.25) %% 1+1.0e-10, cumsum(c(0,prob)))),
+                       unclass(cut((-steps/2/pi +.75) %% 1+1.0e-10, cumsum(c(0,prob)))))
+    ## first arrow
+    arrows(-cos(steps[1])/2, -sin(steps[1])/2, cos(steps[1])*.9,
+               sin(steps[1])*.9, length=.3, angle = 10, lwd=4)
+    points(0, 0, cex=4, pch=20)
+    Sys.sleep(1/speed)
+    points(0, 0, cex=4, pch=20)
+    Sys.sleep(1/speed)
+
+    for(ndx in 2:36){
+      stp <- steps[ndx]
+      ##pie(prob, labels=names, col = 1:nCat, radius = 1, clockwise = TRUE)
+      ## one back -blank out
+      arrows(0, 0, cos(steps[ndx-1])*.9, sin(steps[ndx-1])*.9, length=.3,
+             angle = 10, lwd=4, col=bkg.color[ndx-1,1])
+      segments(0, 0, -cos(steps[ndx-1])*.9, -sin(steps[ndx-1])*.9, lwd=4,
+               col=bkg.color[ndx-1,2])
+      arrows(0, 0, cos(steps[ndx-1]+pi/72)*.9, sin(steps[ndx-1]+pi/72)*.9, length=.3,
+             angle = 10, lwd=4, col=bkg.color[ndx-1,1])
+      segments(0, 0, -cos(steps[ndx-1]+pi/72)*.9, -sin(steps[ndx-1]+pi/72)*.9, lwd=4,
+               col=bkg.color[ndx-1,2])
+      
+      arrows(0, 0, cos(steps[ndx-1]+pi/144)*.9, sin(steps[ndx-1]+pi/144)*.9, length=.3,
+             angle = 10, lwd=4, col=bkg.color[ndx-1,1])
+      segments(0, 0, -cos(steps[ndx-1]+pi/144)*.9, -sin(steps[ndx-1]+pi/144)*.9, lwd=4,
+               col=bkg.color[ndx-1,2])
+      ## smear 
+      arrows(-cos(stp+pi/72)/2, -sin(stp+pi/72)/2, cos(stp+pi/72)*.9,
+              sin(stp+pi/72)*.9, length=.3,
+              angle = 10, lwd=4, col=black2)
+      arrows(-cos(stp+pi/144)/2, -sin(stp+pi/144)/2, cos(stp+pi/144)*.9,
+              sin(stp+pi/144)*.9, length=.3,
+              angle = 10, lwd=4, col=black1)
+      ## current arrow in black
+      arrows(-cos(stp)/2, -sin(stp)/2, cos(stp)*.9, sin(stp)*.9,
+             length=.3, angle = 10, lwd=4)
+      #center point
+      points(0, 0, cex=4, pch=20)
+      Sys.sleep(1/speed)
+    }
+      mtext("O", side=1, at= -1,
+          col = unclass(outcomes[1]), cex=4, line=1)
+  if(nDraws > 1) {
+    if(speed < 20 ){
+      ## keep plotting more draws
+      Sys.sleep(4/speed) ## longer pause 
+      for(i in 2:nDraws){
+        replayPlot(pieface)
+         mtext(rep("O",i-1), side=1, at= -1 +(0:(i-2))/(nDraws-1)*2,
+               col = unclass(outcomes[1:(i-1)]), cex=4, line=1)
+        steps <- pi/2 - 2 * pi * seq(0, 1 + draws[i] , length=36)
+        bkg.color <- cbind(unclass(cut((-steps/2/pi +.25) %% 1+1.0e-10, cumsum(c(0,prob)))),
+                       unclass(cut((-steps/2/pi +.75) %% 1+1.0e-10, cumsum(c(0,prob)))))
+        ## first arrow
+        arrows(-cos(steps[1])/2, -sin(steps[1])/2, cos(steps[1])*.9,
+               sin(steps[1])*.9, length=.3, angle = 10, lwd=4)
+        points(0, 0, cex=4, pch=20)
+        Sys.sleep(1/speed)
+        points(0, 0, cex=4, pch=20)
+        Sys.sleep(1/speed)
+
+        for(ndx in 2:36){
+          stp <- steps[ndx]
+          ## one back -blank out
+          arrows(0, 0, cos(steps[ndx-1])*.9, sin(steps[ndx-1])*.9, length=.3,
+                 angle = 10, lwd=4, col=bkg.color[ndx-1,1])
+          segments(0, 0, -cos(steps[ndx-1])*.9, -sin(steps[ndx-1])*.9, lwd=4,
+                   col=bkg.color[ndx-1,2])
+      arrows(0, 0, cos(steps[ndx-1]+pi/72)*.9, sin(steps[ndx-1]+pi/72)*.9, length=.3,
+             angle = 10, lwd=4, col=bkg.color[ndx-1,1])
+      segments(0, 0, -cos(steps[ndx-1]+pi/72)*.9, -sin(steps[ndx-1]+pi/72)*.9, lwd=4,
+               col=bkg.color[ndx-1,2])
+      
+      arrows(0, 0, cos(steps[ndx-1]+pi/144)*.9, sin(steps[ndx-1]+pi/144)*.9, length=.3,
+             angle = 10, lwd=4, col=bkg.color[ndx-1,1])
+      segments(0, 0, -cos(steps[ndx-1]+pi/144)*.9, -sin(steps[ndx-1]+pi/144)*.9, lwd=4,
+               col=bkg.color[ndx-1,2])
+          ## smear 
+          arrows(-cos(stp+pi/72)/2, -sin(stp+pi/72)/2, cos(stp+pi/72)*.9,
+                 sin(stp+pi/72)*.9, length=.3,
+                 angle = 10, lwd=4, col=black2)
+          arrows(-cos(stp+pi/144)/2, -sin(stp+pi/144)/2, cos(stp+pi/144)*.9,
+                 sin(stp+pi/144)*.9, length=.3,
+                 angle = 10, lwd=4, col=black1)
+          ## current arrow in black
+          arrows(-cos(stp)/2, -sin(stp)/2, cos(stp)*.9, sin(stp)*.9,
+                 length=.3, angle = 10, lwd=4)
+          ##center point
+          points(0, 0, cex=4, pch=20)
+          Sys.sleep(1/speed)
+        }
+
+    
+      }
+    }  
+    ## show all draws
+    replayPlot(pieface)
+    ends <-  pi/2 - 2 * pi * draws
+    arrows(-cos(ends)/2, -sin(ends)/2, cos(ends)*.9, sin(ends)*.9,
+              length=.3, angle = 10, lwd=4, col = black2)
+    mtext(rep("O",nDraws), side=1, at= -1 + (0:(nDraws-1))/(nDraws-1) *2  ,
+          col = unclass(outcomes), cex=4, line=1)
+  }
+ }
+  par(opar)
+  outcomes
+}
